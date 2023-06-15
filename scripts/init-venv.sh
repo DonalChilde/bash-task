@@ -59,7 +59,7 @@ function _define_commands() {
         "source '$PROJECT_PATH/.venv/bin/activate'"
         "export PIP_REQUIRE_VIRTUALENV=true"
         "pip3 install -U pip"
-        "pip3 install -e .[dev,lint,doc,vscode,testing]"
+        "pip3 install -r requirements.txt"
     )
 }
 
