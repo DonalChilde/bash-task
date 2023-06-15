@@ -163,7 +163,7 @@ function --help() {
 
     EXAMPLES:
         $SCRIPT do PARAMETERS
-            _a_short_description_
+            Make/replace a virtual environment, and install dependencies.
 
         $SCRIPT dry-run PARAMETERS
             Display the commands that would be run, takes the same paramaters as do.
