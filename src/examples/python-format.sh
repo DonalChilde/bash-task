@@ -35,7 +35,7 @@ function do() {
 
     # With confirmation before execution. This will also display the list of commands.
     # Pass in the number of seconds to delay confirmation of commands.
-    _do_with_confirmation 5
+    _do_with_confirmation 0
 
     # Without confirmation before execution
     # _do_without_confirmation
@@ -48,17 +48,18 @@ function _define_commands() {
     # to variables in the `_define_variables` function. These variables are then used in
     # the commands. This makes it easier to have a display of the commands in the `--help` function
     # with placeholder names for the CLI parameters.
-    COMMANDS=(
-        "echo 'Command 1'"
-        "echo 'Command 2'"
-        "ls -la $PATH_IN"
-    )
+
+    for i in "${CODE_PATHS[@]}"; do
+        COMMANDS+=("./.venv/bin/isort '$i'" "./.venv/bin/black '$i'")
+    done
 }
 
 function _define_placeholder_variables() {
     # Define the command variables to be used in the help output.
-    PATH_IN="PATH_IN"
-    # PATH_OUT="PATH_OUT
+    # PATH_IN="PATH_IN"
+    # PATH_OUT="PATH_OUT"
+
+    CODE_PATHS=(PATH_ONE PATH_TWO 'Path three')
 }
 
 function _define_variables() {
@@ -67,22 +68,22 @@ function _define_variables() {
     # Checks for the presence of an parameter, but not validity. Output help if missing.
     # https://stackoverflow.com/a/25066804
     # Arguments start at 1, as 0 is the `do` or `dry-run` command.
-    : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
+    # : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
     # : ${ARGS[2]?"Missing a required command line argument. run '$SCRIPT help' for usage instructions."}
 
     # Check for cli arguments in excess of action command - ie. `do` or `dry-run`
-    # EXCESS_ARGS=("${ARGS[@]:1}")
-    # if [ ${#EXCESS_ARGS[@]} -eq 0 ]; then
-    #     # Set default arguments for CODE_PATHS
-    #     CODE_PATHS=(./src ./tests)
-    # else
-    #     CODE_PATHS=(${EXCESS_ARGS[@]})
-    # fi
+    EXCESS_ARGS=("${ARGS[@]:1}")
+    if [ ${#EXCESS_ARGS[@]} -eq 0 ]; then
+        # Set default arguments for CODE_PATHS
+        CODE_PATHS=(./src ./tests)
+    else
+        CODE_PATHS=(${EXCESS_ARGS[@]})
+    fi
 
     # Assign variables used in the commands
     # A variable with a default value:
     #   PATH_IN=${ARGS[1]:-"./foo/bar"}
-    PATH_IN=$(realpath ${ARGS[1]})
+    # PATH_IN=$(realpath ${ARGS[1]})
     # PATH_OUT=$(realpath ${ARGS[2]})
 
 }
@@ -101,6 +102,8 @@ function _do_with_confirmation() {
     echo
     dry-run
     echo
+
+    echo "Have you saved all open/dirty code files?"
 
     # Delay message
     echo "Take $1 seconds to be sure:"
@@ -149,7 +152,7 @@ function --help() {
     HELPTEXT=$(
         cat <<END
     NAME
-        $SCRIPT - _a_short_description_
+        $SCRIPT - Format Python code files.
 
     SYNOPSIS
         $SCRIPT do PARAMETERS
@@ -157,11 +160,11 @@ function --help() {
         $SCRIPT --help
 
     DESCRIPTION
-        _a_longer_description_
+        With python code files, sort the imports with isort and format using black.
 
     EXAMPLES:
         $SCRIPT do PARAMETERS
-            _a_short_description_
+            Format Python code files.
 
         $SCRIPT dry-run PARAMETERS
             Display the commands that would be run, takes the same paramaters as do.
