@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Bash",
 ]
 dependencies = ["scriv[toml]", "pre-commit"]
-version = "0.0.0"
+version = "0.0.1"
 [project.urls]
 Documentation = "https://github.com/DonalChilde/bash-task#readme"
 Issues = "https://github.com/DonalChilde/bash-task/issues"

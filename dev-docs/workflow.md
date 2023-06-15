@@ -19,6 +19,7 @@
 
 Before a release, ensure all of the following are completed. This is usually started in the dev/develop branch.
 
+- [ ] make a pre-_new_version_ branch from dev/develop
 - [ ] All tests pass!
 - [ ] Coverage is acceptable.
 - [ ] Documentation is current.
