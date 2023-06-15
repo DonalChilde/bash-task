@@ -4,7 +4,7 @@
 # HOME: https://github.com/DonalChilde/bash-task
 
 # This template mimics a cli program, with --help display, and dry-run display.
-# It make it easy to define a list of commands to run, with optional parameters from the command line.
+# It makes it easy to define a list of commands to run, with optional parameters from the command line.
 # Optional verification before execution is also available.
 
 # General usage is ./scripts/task.sh do <arguments>
@@ -69,6 +69,15 @@ function _define_variables() {
     # Arguments start at 1, as 0 is the `do` or `dry-run` command.
     : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
     # : ${ARGS[2]?"Missing a required command line argument. run '$SCRIPT help' for usage instructions."}
+
+    # Check for cli arguments in excess of action command - ie. `do` or `dry-run`
+    # EXCESS_ARGS=("${ARGS[@]:1}")
+    # if [ ${#EXCESS_ARGS[@]} -eq 0 ]; then
+    #     # Set default arguments for CODE_PATHS
+    #     CODE_PATHS=(./src ./tests)
+    # else
+    #     CODE_PATHS=(${EXCESS_ARGS[@]})
+    # fi
 
     # Assign variables used in the commands
     # A variable with a default value:
@@ -148,7 +157,7 @@ function --help() {
         $SCRIPT --help
 
     DESCRIPTION
-        $SCRIPT is used to _a_short_description_
+        _a_longer_description_
 
     EXAMPLES:
         $SCRIPT do PARAMETERS
