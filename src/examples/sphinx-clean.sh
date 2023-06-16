@@ -3,21 +3,7 @@
 # This script is based on: https://github.com/adriancooney/Taskfile
 # HOME: https://github.com/DonalChilde/bash-task
 
-# This template mimics a cli program, with --help display, and dry-run display.
-# It makes it easy to define a list of commands to run, with optional parameters from the command line.
-# Optional verification before execution is also available.
-
-# General usage is ./scripts/task.sh do <arguments>
-# For a dry-run ./scripts/task.sh dry-run <arguments>
-# Usage instructions ./scripts/task.sh --help
-
-# Setup Instructions
-#
-# 1. Choose with or without confirmation in the `do` function.
-# 2. Define the commands in the `_define_commands` function.
-# 3. Define the display variables in the `_define_placeholder_variables` function.
-# 4. Define the variables used in commands in the `_define_variables`
-# 5. Provide usage instructions in the `--help` function
+# Delete the contents of a defined directory.
 
 # -e Exit immediately if a pipeline returns a non-zero status.
 # -u Treat unset variables and parameters other than the special parameters ‘@’ or ‘*’ as an error when performing parameter expansion.
@@ -30,12 +16,15 @@ SCRIPT=$0
 # The script command line arguments as an array
 ARGS=("$@")
 
+# The Sphinx build directory. Use care! This will be used to erase files!
+BUILD_DIR=$(realpath ./docs/build/)
+
 function do() {
     # Choose with or without confirmation
 
     # With confirmation before execution. This will also display the list of commands.
     # Pass in the number of seconds to delay confirmation of commands.
-    _do_with_confirmation 5
+    _do_with_confirmation 0
 
     # Without confirmation before execution
     # _do_without_confirmation
@@ -48,16 +37,18 @@ function _define_commands() {
     # to variables in the `_define_variables` function. These variables are then used in
     # the commands. This makes it easier to have a display of the commands in the `--help` function
     # with placeholder names for the CLI parameters.
+
+    # Delete the contents of doc build directory, but leave parent dir.
+    # https://unix.stackexchange.com/a/86950
+
     COMMANDS=(
-        "echo 'Command 1'"
-        "echo 'Command 2'"
-        "ls -la $PATH_IN"
+        "find $BUILD_DIR -mindepth 1 -maxdepth 1 -print0 | xargs -0 rm -rf"
     )
 }
 
 function _define_placeholder_variables() {
     # Define the command variables to be used in the help output.
-    PATH_IN="PATH_IN"
+    # PATH_IN="PATH_IN"
     # PATH_OUT="PATH_OUT
 }
 
@@ -67,7 +58,7 @@ function _define_variables() {
     # Checks for the presence of an parameter, but not validity. Output help if missing.
     # https://stackoverflow.com/a/25066804
     # Arguments start at 1, as 0 is the `do` or `dry-run` command.
-    : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
+    # : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
     # : ${ARGS[2]?"Missing a required command line argument. run '$SCRIPT help' for usage instructions."}
 
     # Check for cli arguments in excess of action command - ie. `do` or `dry-run`
@@ -82,7 +73,7 @@ function _define_variables() {
     # Assign variables used in the commands
     # A variable with a default value:
     #   PATH_IN=${ARGS[1]:-"./foo/bar"}
-    PATH_IN=$(realpath ${ARGS[1]})
+    # PATH_IN=$(realpath ${ARGS[1]})
     # PATH_OUT=$(realpath ${ARGS[2]})
 
 }
@@ -149,21 +140,22 @@ function --help() {
     HELPTEXT=$(
         cat <<END
     NAME
-        $SCRIPT - _a_short_description_
+        $SCRIPT - Clean out the sphinx build directory.
 
     SYNOPSIS
-        $SCRIPT do PARAMETERS
-        $SCRIPT dry-run PARAMETERS
+        $SCRIPT do
+        $SCRIPT dry-run
         $SCRIPT --help
 
     DESCRIPTION
-        _a_longer_description_
+        Delete the contents of the Sphinx build directory. Does not erase the directory itself. The directory
+        is defined in the script. Edit as needed, use care it is correct!
 
     EXAMPLES:
-        $SCRIPT do PARAMETERS
+        $SCRIPT do
             Do the script.
 
-        $SCRIPT dry-run PARAMETERS
+        $SCRIPT dry-run
             Display the commands that would be run, takes the same paramaters as do.
 
         $SCRIPT --help

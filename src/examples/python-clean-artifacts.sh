@@ -3,21 +3,7 @@
 # This script is based on: https://github.com/adriancooney/Taskfile
 # HOME: https://github.com/DonalChilde/bash-task
 
-# This template mimics a cli program, with --help display, and dry-run display.
-# It makes it easy to define a list of commands to run, with optional parameters from the command line.
-# Optional verification before execution is also available.
-
-# General usage is ./scripts/task.sh do <arguments>
-# For a dry-run ./scripts/task.sh dry-run <arguments>
-# Usage instructions ./scripts/task.sh --help
-
-# Setup Instructions
-#
-# 1. Choose with or without confirmation in the `do` function.
-# 2. Define the commands in the `_define_commands` function.
-# 3. Define the display variables in the `_define_placeholder_variables` function.
-# 4. Define the variables used in commands in the `_define_variables`
-# 5. Provide usage instructions in the `--help` function
+# Clean out python compilation artifacts.
 
 # -e Exit immediately if a pipeline returns a non-zero status.
 # -u Treat unset variables and parameters other than the special parameters ‘@’ or ‘*’ as an error when performing parameter expansion.
@@ -35,7 +21,7 @@ function do() {
 
     # With confirmation before execution. This will also display the list of commands.
     # Pass in the number of seconds to delay confirmation of commands.
-    _do_with_confirmation 5
+    _do_with_confirmation 0
 
     # Without confirmation before execution
     # _do_without_confirmation
@@ -49,9 +35,10 @@ function _define_commands() {
     # the commands. This makes it easier to have a display of the commands in the `--help` function
     # with placeholder names for the CLI parameters.
     COMMANDS=(
-        "echo 'Command 1'"
-        "echo 'Command 2'"
-        "ls -la $PATH_IN"
+        "find $PATH_IN -name '*.pyc' -exec rm -f {} +"
+        "find $PATH_IN -name '*.pyo' -exec rm -f {} +"
+        "find $PATH_IN -name '*~' -exec rm -f {} +"
+        "find $PATH_IN -name '__pycache__' -exec rm -fr {} +"
     )
 }
 
@@ -149,7 +136,7 @@ function --help() {
     HELPTEXT=$(
         cat <<END
     NAME
-        $SCRIPT - _a_short_description_
+        $SCRIPT - Delete python compilation artifacts.
 
     SYNOPSIS
         $SCRIPT do PARAMETERS
@@ -157,7 +144,7 @@ function --help() {
         $SCRIPT --help
 
     DESCRIPTION
-        _a_longer_description_
+        Recursive delete .pyc .pyo __pycache__ and temp files starting with ~.
 
     EXAMPLES:
         $SCRIPT do PARAMETERS

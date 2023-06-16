@@ -3,21 +3,7 @@
 # This script is based on: https://github.com/adriancooney/Taskfile
 # HOME: https://github.com/DonalChilde/bash-task
 
-# This template mimics a cli program, with --help display, and dry-run display.
-# It makes it easy to define a list of commands to run, with optional parameters from the command line.
-# Optional verification before execution is also available.
-
-# General usage is ./scripts/task.sh do <arguments>
-# For a dry-run ./scripts/task.sh dry-run <arguments>
-# Usage instructions ./scripts/task.sh --help
-
-# Setup Instructions
-#
-# 1. Choose with or without confirmation in the `do` function.
-# 2. Define the commands in the `_define_commands` function.
-# 3. Define the display variables in the `_define_placeholder_variables` function.
-# 4. Define the variables used in commands in the `_define_variables`
-# 5. Provide usage instructions in the `--help` function
+# Upload a package to PyPi Test
 
 # -e Exit immediately if a pipeline returns a non-zero status.
 # -u Treat unset variables and parameters other than the special parameters ‘@’ or ‘*’ as an error when performing parameter expansion.
@@ -29,6 +15,11 @@ set -euo pipefail
 SCRIPT=$0
 # The script command line arguments as an array
 ARGS=("$@")
+
+# The location of the .pypirc file relative to the project root.
+PYPIRC_RELATIVE="secrets/.pypirc"
+# The location of the dist directory relative to the project root.
+DIST_DIR_RELATIVE="dist/"
 
 function do() {
     # Choose with or without confirmation
@@ -49,9 +40,8 @@ function _define_commands() {
     # the commands. This makes it easier to have a display of the commands in the `--help` function
     # with placeholder names for the CLI parameters.
     COMMANDS=(
-        "echo 'Command 1'"
-        "echo 'Command 2'"
-        "ls -la $PATH_IN"
+        "twine check --strict '$DIST_DIR/*'"
+        "twine upload --config-file '$PYPIRC' --repository testpypi '$DIST_DIR/*'"
     )
 }
 
@@ -59,6 +49,8 @@ function _define_placeholder_variables() {
     # Define the command variables to be used in the help output.
     PATH_IN="PATH_IN"
     # PATH_OUT="PATH_OUT
+    DIST_DIR="PATH_IN/DIST_DIR_RELATIVE"
+    PYPIRC="PATH_IN/PYPIRC_RELATIVE"
 }
 
 function _define_variables() {
@@ -85,6 +77,9 @@ function _define_variables() {
     PATH_IN=$(realpath ${ARGS[1]})
     # PATH_OUT=$(realpath ${ARGS[2]})
 
+    DIST_DIR="$PATH_IN/$DIST_DIR_RELATIVE"
+    PYPIRC="$PATH_IN/$PYPIRC_RELATIVE"
+
 }
 
 function _do_without_confirmation() {
@@ -100,6 +95,16 @@ function _do_with_confirmation() {
     echo "This will run the following commands:"
     echo
     dry-run
+    echo
+
+    echo "Preparing to upload to PyPi."
+    echo "Did you:"
+    echo "\t- Check for the correct branch?"
+    echo "\t- Update the version number?"
+    echo "\t- Update the documentation?"
+    echo "\t- Run ALL THE TESTS?"
+    echo "\t- Update the changelog?"
+    echo "\t- Build a fresh dist/?"
     echo
 
     # Delay message
@@ -149,7 +154,7 @@ function --help() {
     HELPTEXT=$(
         cat <<END
     NAME
-        $SCRIPT - _a_short_description_
+        $SCRIPT - Upload a package to PyPi.
 
     SYNOPSIS
         $SCRIPT do PARAMETERS
@@ -157,7 +162,7 @@ function --help() {
         $SCRIPT --help
 
     DESCRIPTION
-        _a_longer_description_
+        Uses twine to check and upload a package to PyPI.
 
     EXAMPLES:
         $SCRIPT do PARAMETERS
