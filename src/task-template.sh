@@ -125,6 +125,7 @@ function _run_commands() {
     _define_commands
 
     for i in "${COMMANDS[@]}"; do
+        echo "$i"
         eval $i
     done
 }
