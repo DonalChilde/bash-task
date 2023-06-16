@@ -26,10 +26,10 @@ issue link [#1](https://github.com/DonalChilde/bash-task/issues/1)
 - Add a PyPi test release script.
 
   - Pull requests
-    - [#0](https://github.com/DonalChilde/bash-task/pull/0)
+    - [#10](https://github.com/DonalChilde/bash-task/pull/10)
 
   - closes
-    - [#0](https://github.com/DonalChilde/bash-task/issues/0)
+    - [#9](https://github.com/DonalChilde/bash-task/issues/9)
 
 <!--
 
