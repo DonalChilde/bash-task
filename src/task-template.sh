@@ -161,7 +161,7 @@ function --help() {
 
     EXAMPLES:
         $SCRIPT do PARAMETERS
-            _a_short_description_
+            Do the script.
 
         $SCRIPT dry-run PARAMETERS
             Display the commands that would be run, takes the same paramaters as do.
