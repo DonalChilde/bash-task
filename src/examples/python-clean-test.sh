@@ -3,7 +3,7 @@
 # This script is based on: https://github.com/adriancooney/Taskfile
 # HOME: https://github.com/DonalChilde/bash-task
 
-# Delete the contents of a defined directory.
+# Clean out test and lint artifacts.
 
 # -e Exit immediately if a pipeline returns a non-zero status.
 # -u Treat unset variables and parameters other than the special parameters ‘@’ or ‘*’ as an error when performing parameter expansion.
@@ -15,9 +15,6 @@ set -euo pipefail
 SCRIPT=$0
 # The script command line arguments as an array
 ARGS=("$@")
-
-# The Sphinx build directory. Use care! This will be used to erase files!
-BUILD_DIR=$(realpath ./docs/build/)
 
 function do() {
     # Choose with or without confirmation
@@ -37,18 +34,19 @@ function _define_commands() {
     # to variables in the `_define_variables` function. These variables are then used in
     # the commands. This makes it easier to have a display of the commands in the `--help` function
     # with placeholder names for the CLI parameters.
-
-    # Delete the contents of doc build directory, but leave parent dir.
-    # https://unix.stackexchange.com/a/86950
-
     COMMANDS=(
-        "find $BUILD_DIR -mindepth 1 -maxdepth 1 -print0 | xargs -0 rm -rf"
+        "rm -fr $PATH_IN/.tox/"
+        "rm -fr $PATH_IN/.nox/"
+        "rm -f $PATH_IN/.coverage"
+        "rm -fr $PATH_IN/htmlcov/"
+        "rm -fr $PATH_IN/.pytest_cache"
+        "rm -fr $PATH_IN/.mypy_cache"
     )
 }
 
 function _define_placeholder_variables() {
     # Define the command variables to be used in the help output.
-    # PATH_IN="PATH_IN"
+    PATH_IN="PATH_IN"
     # PATH_OUT="PATH_OUT
 }
 
@@ -58,7 +56,7 @@ function _define_variables() {
     # Checks for the presence of an parameter, but not validity. Output help if missing.
     # https://stackoverflow.com/a/25066804
     # Arguments start at 1, as 0 is the `do` or `dry-run` command.
-    # : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
+    : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
     # : ${ARGS[2]?"Missing a required command line argument. run '$SCRIPT help' for usage instructions."}
 
     # Check for cli arguments in excess of action command - ie. `do` or `dry-run`
@@ -73,7 +71,7 @@ function _define_variables() {
     # Assign variables used in the commands
     # A variable with a default value:
     #   PATH_IN=${ARGS[1]:-"./foo/bar"}
-    # PATH_IN=$(realpath ${ARGS[1]})
+    PATH_IN=$(realpath ${ARGS[1]})
     # PATH_OUT=$(realpath ${ARGS[2]})
 
 }
@@ -140,22 +138,21 @@ function --help() {
     HELPTEXT=$(
         cat <<END
     NAME
-        $SCRIPT - Clean out the sphinx build directory.
+        $SCRIPT - Clean out test and lint artifacts
 
     SYNOPSIS
-        $SCRIPT do
-        $SCRIPT dry-run
+        $SCRIPT do PARAMETERS
+        $SCRIPT dry-run PARAMETERS
         $SCRIPT --help
 
     DESCRIPTION
-        Delete the contents of the Sphinx build directory. Does not erase the directory itself. The directory
-        is defined in the script. Edit as needed, use care it is correct!
+        Remove tox, coverage, mypy, and pytest artifacts.
 
     EXAMPLES:
-        $SCRIPT do
+        $SCRIPT do PARAMETERS
             Do the script.
 
-        $SCRIPT dry-run
+        $SCRIPT dry-run PARAMETERS
             Display the commands that would be run, takes the same paramaters as do.
 
         $SCRIPT --help
