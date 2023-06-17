@@ -179,7 +179,7 @@ function _run_commands() {
         if [ $ECHO_COMMANDS -eq 1 ]; then
             echo "$i"
         fi
-        eval $i
+        eval "$i"
     done
 }
 
@@ -206,7 +206,7 @@ function _dry-run() {
     _define_variables
     _define_commands
     for i in "${COMMANDS[@]}"; do
-        echo $i
+        echo "$i"
     done
 }
 
