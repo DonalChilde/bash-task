@@ -95,6 +95,8 @@ function _define_commands() {
 
 function _define_placeholder_variables() {
     # Define the command variables to be used in the --help output.
+    # These are variables that are normaly defined from cli arguments,
+    # not ones that are already defined in the script settings.
 
     PATH_IN="PATH_IN"
     # PATH_OUT="PATH_OUT

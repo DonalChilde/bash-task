@@ -3,51 +3,87 @@
 # This script is based on: https://github.com/adriancooney/Taskfile
 # HOME: https://github.com/DonalChilde/bash-task
 
-# This template mimics a cli program, with --help display, and dry-run display.
-# It makes it easy to define a list of commands to run, with optional parameters from the command line.
-# Optional verification before execution is also available.
+# This template mimics a cli program, with --help and dry-run display.
+# It makes it easy to define a list of commands to run,
+# with optional parameters from the command line.
+# Confirmation before execution with optional
+# delay before execution is also available.
 
 # General usage is ./scripts/task.sh do <arguments>
 # For a dry-run ./scripts/task.sh dry-run <arguments>
 # Usage instructions ./scripts/task.sh --help
 
-# Setup Instructions
-#
-# 1. Choose with or without confirmation in the `do` function.
-# 2. Define the commands in the `_define_commands` function.
-# 3. Define the display variables in the `_define_placeholder_variables` function.
-# 4. Define the variables used in commands in the `_define_variables`
-# 5. Provide usage instructions in the `--help` function
+########################################
+########## Setup Instructions ##########
+########################################
+
+# 1. Set script configuration variables.
+# 2. Set custom script variables.
+# 3. Edit custom script functions.
+# 4. Set --help configuration variables.
+
+##########################################
+########## Script configuration ##########
+##########################################
 
 # -e Exit immediately if a pipeline returns a non-zero status.
 # -u Treat unset variables and parameters other than the special parameters ‘@’ or ‘*’ as an error when performing parameter expansion.
 # -o pipefail If set, the return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status, or zero if all commands in the pipeline exit successfully.
 set -euo pipefail
 
-# Define non-parameter variables here.
-# The name of the script
-SCRIPT=$0
 # The script command line arguments as an array
+# Do not alter this variable
 ARGS=("$@")
 
-function do() {
-    # Choose with or without confirmation
+# echo commands before eval
+ECHO_COMMANDS=1 # true
+# ECHO_COMMANDS=0 # false
 
-    # With confirmation before execution. This will also display the list of commands.
-    # Pass in the number of seconds to delay confirmation of commands.
-    _do_with_confirmation 0
+# confirm execution of commands before eval
+EXECUTION_CONFIRMATION=1 # true
+# EXECUTION_CONFIRMATION=0 # false
 
-    # Without confirmation before execution
-    # _do_without_confirmation
-}
+# Seconds to delay execution. Used in conjunction with EXECUTION_CONFIRMATION
+DELAY=3
+
+######################################
+########## Custom variables ##########
+######################################
+
+# None
+
+##########################################
+########## --help configuration ##########
+##########################################
+
+# The name of the script
+SCRIPT=$(basename $0)
+
+# A one line description.
+SHORT_DESCRIPTION="Format Python code files."
+
+# A Multiline description of the script.
+LONG_DESCRIPTION=$(
+    cat <<END
+With python code files, sort the imports with isort and format using black.
+            If no arguments given for paths, './src ./tests' will be used.
+END
+)
+
+# CLI arguments expected, used in the --help output
+# CLI_ARGS="PATH_IN PATH_OUT"
+CLI_ARGS="PATH_ONE PATH_TWO 'Path three'"
+
+#############################################
+########## custom script functions ##########
+#############################################
 
 function _define_commands() {
     # Define the commands used in this script.
-
-    # Parameters passed in from the command line are generally assigned
-    # to variables in the `_define_variables` function. These variables are then used in
-    # the commands. This makes it easier to have a display of the commands in the `--help` function
-    # with placeholder names for the CLI parameters.
+    # Variables used in these commands are expected to be defined
+    #   - in the script settings above, and/or
+    #   - in the `_define_variables` function for actual use, and
+    #   - in the `_define_placeholder_variables` function for --help display.
 
     for i in "${CODE_PATHS[@]}"; do
         COMMANDS+=("./.venv/bin/isort '$i'" "./.venv/bin/black '$i'")
@@ -55,21 +91,18 @@ function _define_commands() {
 }
 
 function _define_placeholder_variables() {
-    # Define the command variables to be used in the help output.
-    # PATH_IN="PATH_IN"
-    # PATH_OUT="PATH_OUT"
+    # Define the command variables to be used in the --help output.
+    # These are variables that are normaly defined from cli arguments,
+    # not ones that are already defined in the script settings.
 
     CODE_PATHS=(PATH_ONE PATH_TWO 'Path three')
+    # PATH_OUT="PATH_OUT
 }
 
 function _define_variables() {
-    # Check for correct parameters passed in, and assign to variables to be used in commands.
-
-    # Checks for the presence of an parameter, but not validity. Output help if missing.
-    # https://stackoverflow.com/a/25066804
-    # Arguments start at 1, as 0 is the `do` or `dry-run` command.
-    # : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
-    # : ${ARGS[2]?"Missing a required command line argument. run '$SCRIPT help' for usage instructions."}
+    # Turn arguments from the command line into variables for use in _define_commands
+    # This function is called for `do` and `dry-run` but not `--help`.
+    # Variables defined here are not visible during --help display.
 
     # Check for cli arguments in excess of action command - ie. `do` or `dry-run`
     EXCESS_ARGS=("${ARGS[@]:1}")
@@ -79,47 +112,49 @@ function _define_variables() {
     else
         CODE_PATHS=(${EXCESS_ARGS[@]})
     fi
-
-    # Assign variables used in the commands
-    # A variable with a default value:
-    #   PATH_IN=${ARGS[1]:-"./foo/bar"}
-    # PATH_IN=$(realpath ${ARGS[1]})
-    # PATH_OUT=$(realpath ${ARGS[2]})
-
 }
 
-function _do_without_confirmation() {
+function _confirmation_message() {
+    # Edit this function for a custom confirmation message.
+    echo "This will run the following commands:"
+    echo
+    _dry-run
+    echo
+    echo "Have you saved all open/dirty code files?"
+}
 
-    echo "Running Commands"
-    echo
-    echo
+##########################################
+########## NOT USUALLY MODIFIED ##########
+##########################################
+
+function do() {
+    if [ $EXECUTION_CONFIRMATION -eq 1 ]; then
+        _confirmation_message
+        _confirmation_delay
+        _confirmation_dialog
+    fi
     _run_commands
 }
 
-function _do_with_confirmation() {
-
-    echo "This will run the following commands:"
-    echo
-    dry-run
-    echo
-
-    echo "Have you saved all open/dirty code files?"
-
-    # Delay message
-    echo "Take $1 seconds to be sure:"
-    echo
-    _countdown $1
-    echo
-
+function _confirmation_dialog() {
     # Confirmation dialog
     # https://stackoverflow.com/a/1885534/105844
     read -p "-----Are you sure? (Y/N)-----" -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        _run_commands
+        :
     else
         echo "Commands Declined"
         exit 1
+    fi
+}
+
+function _confirmation_delay() {
+    if [ $DELAY -gt 0 ]; then
+        echo "Take $DELAY seconds to be sure:"
+        echo
+        _countdown $DELAY
+        echo
     fi
 }
 
@@ -128,20 +163,37 @@ function _run_commands() {
     _define_commands
 
     for i in "${COMMANDS[@]}"; do
-        eval $i
+        if [ $ECHO_COMMANDS -eq 1 ]; then
+            echo "$i"
+        fi
+        eval "$i"
+    done
+}
+
+function _countdown() {
+    # https://superuser.com/questions/611538/is-there-a-way-to-display-a-countdown-or-stopwatch-timer-in-a-terminal
+    # Display a countdown clock.
+    # $1 = int seconds
+    date1=$(($(date +%s) + $1))
+    while [ "$date1" -ge $(date +%s) ]; do
+        echo -ne "$(date -u --date @$(($date1 - $(date +%s))) +%H:%M:%S)\r"
+        sleep 0.1
     done
 }
 
 function dry-run() {
-    _define_variables
-    _define_commands
-
     echo "Dry run for $SCRIPT"
     echo
     echo "These are the commands that would be executed."
     echo
+    _dry-run
+}
+
+function _dry-run() {
+    _define_variables
+    _define_commands
     for i in "${COMMANDS[@]}"; do
-        echo $i
+        echo "$i"
     done
 }
 
@@ -152,22 +204,22 @@ function --help() {
     HELPTEXT=$(
         cat <<END
     NAME
-        $SCRIPT - Format Python code files.
+        $SCRIPT - $SHORT_DESCRIPTION
 
     SYNOPSIS
-        $SCRIPT do PARAMETERS
-        $SCRIPT dry-run PARAMETERS
+        $SCRIPT do $CLI_ARGS
+        $SCRIPT dry-run $CLI_ARGS
         $SCRIPT --help
 
     DESCRIPTION
-        With python code files, sort the imports with isort and format using black.
+        $LONG_DESCRIPTION
 
     EXAMPLES:
-        $SCRIPT do PARAMETERS
-            Format Python code files.
+        $SCRIPT do $CLI_ARGS
+            Do the script.
 
-        $SCRIPT dry-run PARAMETERS
-            Display the commands that would be run, takes the same paramaters as do.
+        $SCRIPT dry-run $CLI_ARGS
+            Display the commands that would be run.
 
         $SCRIPT --help
             Output the usage instructions.
@@ -184,18 +236,25 @@ END
     echo
 }
 
-function _countdown() {
-    # https://superuser.com/questions/611538/is-there-a-way-to-display-a-countdown-or-stopwatch-timer-in-a-terminal
-    # Display a countdown clock.
-    # $1 = int seconds
-    date1=$(($(date +%s) + $1))
-    while [ "$date1" -ge $(date +%s) ]; do
-        echo -ne "$(date -u --date @$(($date1 - $(date +%s))) +%H:%M:%S)\r"
-        sleep 0.1
-    done
+function _command_check() {
+    if [ "${ARGS[0]}" = "do" ]; then
+        :
+    elif [ "${ARGS[0]}" = "dry-run" ]; then
+        :
+    elif [ "${ARGS[0]}" = "--help" ]; then
+        :
+    else
+        echo "The first script argument must be one of ['do', 'dry-run', '--help']."
+        echo "Received '${ARGS[0]}'"
+        echo "Use '$SCRIPT --help' for usage instructions."
+        exit 1
+    fi
 }
 
+_command_check
 # Runs the help function if no arguments given to script.
 TIMEFORMAT=$'\nTask completed in %3lR'
 time "${@:---help}"
+#################################################################
 ################### No code below this line #####################
+#################################################################

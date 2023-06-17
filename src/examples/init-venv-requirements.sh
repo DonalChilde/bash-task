@@ -40,18 +40,21 @@ ECHO_COMMANDS=1 # true
 # ECHO_COMMANDS=0 # false
 
 # confirm execution of commands before eval
-EXECUTION_CONFIRMATION=1 # true
-# EXECUTION_CONFIRMATION=0 # false
+# EXECUTION_CONFIRMATION=1 # true
+EXECUTION_CONFIRMATION=0 # false
 
 # Seconds to delay execution. Used in conjunction with EXECUTION_CONFIRMATION
-DELAY=3
+DELAY=0
 
 ######################################
 ########## Custom variables ##########
 ######################################
 
-# The Sphinx build directory. Use care! This will be used to erase files!
-BUILD_DIR=$(realpath ./docs/build/)
+# Python version to be used when making virtual environments
+PY_VERSION="3.11"
+
+# Export this variable for use with pyenv
+export PYENV_VERSION="$PY_VERSION"
 
 ##########################################
 ########## --help configuration ##########
@@ -61,20 +64,21 @@ BUILD_DIR=$(realpath ./docs/build/)
 SCRIPT=$(basename $0)
 
 # A one line description.
-SHORT_DESCRIPTION="Clean out the sphinx build directory."
+SHORT_DESCRIPTION="Make/replace a python virtual environment in the project directory."
 
 # A Multiline description of the script.
 LONG_DESCRIPTION=$(
     cat <<END
-$SCRIPT is used to Delete the contents of the Sphinx build directory, but does
-            not erase the directory itself. The directory location is defined in
-            the script. Edit as needed, use care it is correct! Script expects to
-            be called from project root.
+$SCRIPT is used to to init a Python virtual environment, update pip, and install Python dependencies.
+            If a venv already exists, it will be erased and replaced. Expects to be called with
+            the project root dir. Creates a venv at PROJECT_ROOT/.venv, with dependencies
+            from PROJECT_ROOT/requirements.txt.
 END
 )
 
 # CLI arguments expected, used in the --help output
 # CLI_ARGS="PATH_IN PATH_OUT"
+CLI_ARGS="PROJECT_ROOT"
 
 #############################################
 ########## custom script functions ##########
@@ -88,7 +92,12 @@ function _define_commands() {
     #   - in the `_define_placeholder_variables` function for --help display.
 
     COMMANDS=(
-        "find $BUILD_DIR -mindepth 1 -maxdepth 1 -print0 | xargs -0 rm -rf"
+        "if [ -d '$PROJECT_PATH/.venv' ]; then rm -rf '$PROJECT_PATH/.venv'; fi"
+        "python3 -m venv '$PROJECT_PATH/.venv'"
+        "source '$PROJECT_PATH/.venv/bin/activate'"
+        "export PIP_REQUIRE_VIRTUALENV=true"
+        "$PROJECT_PATH/.venv/bin/pip3 install -U pip"
+        "$PROJECT_PATH/.venv/bin/pip3 install -r $PROJECT_PATH/requirements.txt"
     )
 }
 
@@ -97,6 +106,7 @@ function _define_placeholder_variables() {
     # These are variables that are normaly defined from cli arguments,
     # not ones that are already defined in the script settings.
 
+    PROJECT_PATH="PROJECT_ROOT"
 }
 
 function _define_variables() {
@@ -104,6 +114,12 @@ function _define_variables() {
     # This function is called for `do` and `dry-run` but not `--help`.
     # Variables defined here are not visible during --help display.
 
+    # Checks for the presence of an parameter, but not validity. Output help if missing.
+    # https://stackoverflow.com/a/25066804
+    # Arguments start at 1, as 0 is the `do` or `dry-run` command.
+    : ${ARGS[1]?"Missing a required command line argument. run '$SCRIPT --help' for usage instructions."}
+
+    PROJECT_PATH=$(realpath ${ARGS[1]})
 }
 
 function _confirmation_message() {
